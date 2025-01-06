@@ -10,7 +10,6 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
   imports: [
     MatIconModule,
     MatButtonModule,
-    NgIf,
     RouterLink,
     RouterLinkActive,
     RouterOutlet,

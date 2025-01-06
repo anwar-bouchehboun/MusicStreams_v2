@@ -115,6 +115,9 @@ import Swal from 'sweetalert2';
             accept=".png,.jpg,.jpeg"
             style="display: none"
           />
+          <span class="text-xl font-bold text-teal-700">
+            Optionnel
+          </span>
           @if (coverPreview) {
           <div class="cover-preview">
             <img
@@ -174,6 +177,7 @@ export class TrackFormComponent implements OnInit {
   coverFile?: File;
   coverPreview?: string;
 
+  ACCEPTED_AUDIO_FORMATS = ['audio/mpeg', 'audio/wav', 'audio/ogg'];
 
   constructor(
     private fb: FormBuilder,
@@ -202,13 +206,13 @@ export class TrackFormComponent implements OnInit {
       artist: ['', [Validators.required]],
       description: ['', [Validators.required, Validators.maxLength(200)]],
       category: ['', [Validators.required]],
-      audioFile: [null, this.isEditMode ? [] : [Validators.required]],
+      coverFile: [''],
+      audioFile: ['', [Validators.required]],
     });
   }
 
   private loadTrack(id: string) {
     this.store.select(selectTrackById(id)).subscribe((track) => {
-
       if (track) {
         this.trackForm.patchValue({
           title: track.title,
@@ -224,10 +228,12 @@ export class TrackFormComponent implements OnInit {
           this.coverPreview = track.coverUrl;
         }
 
-        const audioFileControl = this.trackForm.get('audioFile');
-        if (audioFileControl) {
-          audioFileControl.clearValidators();
-          audioFileControl.updateValueAndValidity();
+        if (this.isEditMode) {
+          const audioFileControl = this.trackForm.get('audioFile');
+          if (audioFileControl) {
+            audioFileControl.clearValidators();
+            audioFileControl.updateValueAndValidity();
+          }
         }
         if (track.audioFile) {
           this.audioFile = track.audioFile;
@@ -239,7 +245,25 @@ export class TrackFormComponent implements OnInit {
   onFileSelected(event: Event): void {
     const file = (event.target as HTMLInputElement).files?.[0];
     if (file) {
+      if (file.size > 15 * 1024 * 1024) {
+        Swal.fire({
+          title: 'Fichier trop volumineux',
+          text: 'La taille du fichier ne doit pas dépasser 15MB',
+          icon: 'error',
+        });
+        return;
+      }
+      if (!this.ACCEPTED_AUDIO_FORMATS.includes(file.type)) {
+        Swal.fire({
+          title: 'Format invalide',
+          text: 'Veuillez sélectionner un fichier audio au format MP3, WAV ou OGG',
+          icon: 'error',
+        });
+        return;
+      }
+
       this.audioFile = file;
+      this.trackForm.patchValue({ audioFile: file });
       this.calculateDuration(file);
     }
   }
@@ -285,6 +309,15 @@ export class TrackFormComponent implements OnInit {
   }
 
   onSubmit(): void {
+    if (!this.audioFile && !this.isEditMode) {
+      Swal.fire({
+        title: 'Fichier audio manquant',
+        text: 'Veuillez sélectionner un fichier audio',
+        icon: 'error',
+      });
+      return;
+    }
+
     if (this.trackForm.valid) {
       const trackData = {
         ...this.trackForm.value,
