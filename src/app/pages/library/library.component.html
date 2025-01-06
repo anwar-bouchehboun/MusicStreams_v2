@@ -1,0 +1,110 @@
+<div class="container p-4 mx-auto">
+  <div class="mb-8">
+    <a routerLink="/add-track" mat-raised-button color="primary">
+      <mat-icon>add_circle</mat-icon>
+      <span class="ml-2">Ajouter une chanson</span>
+    </a>
+  </div>
+
+  <div class="flex flex-col gap-4 mb-6 md:flex-row">
+    <mat-form-field class="w-full md:w-1/2">
+      <mat-label>Rechercher</mat-label>
+      <input
+        matInput
+        [(ngModel)]="searchQuery"
+        placeholder="Rechercher par titre ou artiste"
+      />
+      <button
+        *ngIf="searchQuery"
+        matSuffix
+        mat-icon-button
+        (click)="searchQuery = ''"
+      >
+        <mat-icon>close</mat-icon>
+      </button>
+    </mat-form-field>
+
+    <mat-form-field class="w-full md:w-1/3">
+      <mat-label>Catégorie</mat-label>
+      <mat-select [(ngModel)]="selectedCategory">
+        <mat-option value="all">Toutes les catégories</mat-option>
+        <mat-option value="rock">Rock</mat-option>
+        <mat-option value="pop">Pop</mat-option>
+        <mat-option value="cha3bi">cha3bi</mat-option>
+        <mat-option value="rap">rap</mat-option>
+        <mat-option value="other">other</mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+
+  @if (isLoading) {
+  <div class="flex justify-center items-center h-64">
+    <mat-spinner diameter="50"></mat-spinner>
+  </div>
+  } @else {
+  <div class="grid grid-cols-1 gap-4 p-4 md:grid-cols-2 lg:grid-cols-3">
+    @for (track of filteredTracks; track $index) {
+    <!-- Carte 1 -->
+    <div class="overflow-hidden bg-white rounded-lg shadow-md">
+      <div class="relative">
+        <img
+          [src]="track.coverUrl || 'assets/images/music.png'"
+          [alt]="track.title"
+          class="object-cover w-full h-48 transition-transform duration-300 hover:scale-105"
+          (error)="onImageError($event)"
+        />
+        <div class="absolute right-0 bottom-0 p-2">
+          <button
+            routerLink="/track/{{ track.id }}"
+            class="p-2 text-white bg-red-500 rounded-full hover:bg-red-600"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="w-6 h-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
+              />
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div class="p-4">
+        <h3 class="mb-1 text-lg font-semibold">{{ track.title }}</h3>
+        <p class="mb-2 text-gray-600">{{ track.artist }}</p>
+        <span class="text-sm text-gray-900">{{ track.addedDate | date }}</span>
+        <div class="flex justify-between items-center">
+          <span class="text-sm text-gray-500">{{
+            track.duration | formatDuration
+          }}</span>
+          <div class="flex gap-2">
+            <span
+              class="px-4 py-2 text-sm font-bold text-white bg-black rounded border border-gray-900"
+              >{{ track.category }}</span
+            >
+            <button
+              [routerLink]="['/edit-track', track.id]"
+              class="p-1 text-blue-600 hover:text-blue-800"
+            >
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button
+              (click)="deleteTrack(track)"
+              class="p-1 text-red-600 hover:text-red-800"
+            >
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    }
+  </div>
+  }
+</div>

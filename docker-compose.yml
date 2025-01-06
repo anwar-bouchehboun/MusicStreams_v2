@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+    networks:
+      - app-network
+
+  api:
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - ./api:/app
+    command: >
+      sh -c "
+        if [ ! -f package.json ]; then
+          npm init -y &&
+          npm install express cors dotenv
+        fi &&
+        npm start
+      "
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

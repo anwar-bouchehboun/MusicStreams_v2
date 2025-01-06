@@ -1,0 +1,152 @@
+/* Container principal */
+.player-container {
+  padding: 1.5rem;
+  background: linear-gradient(to bottom, #111827, #1f2937);
+  border-radius: 0.75rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+/* Contrôles de lecture */
+.playback-controls {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.control-button {
+  padding: 0.75rem;
+  border-radius: 9999px;
+  transition: all 200ms;
+}
+
+.control-button:hover {
+  transform: scale(1.1);
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.play-button {
+  padding: 1rem;
+  color: white;
+  background-color: #3b82f6;
+}
+
+.play-button:hover {
+  background-color: #2563eb;
+}
+
+/* Barre de progression */
+.progress-controls {
+  position: relative;
+  width: 100%;
+}
+
+.progress-bar {
+  position: relative;
+  height: 0.375rem;
+  background-color: #374151;
+  border-radius: 9999px;
+  transition: all 200ms;
+  cursor: pointer;
+}
+
+.progress-bar:hover {
+  height: 0.5rem;
+}
+
+.progress-fill {
+  position: absolute;
+  height: 100%;
+  background-color: #3b82f6;
+  border-radius: 9999px;
+  transition: all 100ms linear;
+}
+
+.buffering-bar {
+  position: absolute;
+  height: 100%;
+  background-color: #4b5563;
+  border-radius: 9999px;
+  opacity: 0.5;
+}
+
+.seek-handle {
+  position: absolute;
+  top: 50%;
+  width: 1rem;
+  height: 1rem;
+  background-color: #3b82f6;
+  border-radius: 9999px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  opacity: 0;
+  transition: opacity 200ms;
+  transform: translate(-50%, -50%);
+}
+
+.progress-bar:hover .seek-handle {
+  opacity: 1;
+}
+
+.seek-handle:hover {
+  transform: translate(-50%, -50%) scale(1.1);
+}
+
+/* Contrôles de volume */
+.volume-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+  padding: 0.5rem;
+  background-color: #1f2937;
+  border-radius: 0.5rem;
+  width: 12rem;
+}
+
+.volume-slider {
+  flex: 1;
+}
+
+/* Affichage du temps */
+.time-display {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  color: #9ca3af;
+}
+
+/* Informations de la piste */
+.track-info {
+  margin-top: 1.5rem;
+  text-align: center;
+}
+
+.track-title {
+  margin-bottom: 0.5rem;
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: white;
+}
+
+.track-artist {
+  color: #9ca3af;
+}
+
+/* Animations */
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.playing {
+  animation: pulse 2s infinite;
+}
+
+/* Responsive design */
+@media (max-width: 640px) {
+  .volume-controls {
+    width: 100%;
+  }
+}
