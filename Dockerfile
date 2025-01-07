@@ -11,7 +11,8 @@ COPY package*.json ./
 # Installer les dépendances avec des options de base
 RUN npm ci --prefer-offline --no-audit
 
-# Copier le reste des fichiers
+# Copier le reste des fichiers et le dossier src
+
 COPY . .
 RUN npm run build
 RUN ls -la dist/
