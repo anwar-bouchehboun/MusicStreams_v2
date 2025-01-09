@@ -21,6 +21,7 @@ import { selectTrackById } from '../../store/selectors/track.selectors';
 import { uniqueTitleValidator } from '../../shared/validators/unique-title.validator';
 import { AppState } from '../../models/app.state';
 import Swal from 'sweetalert2';
+import { BehaviorSubject } from 'rxjs';
 
 @Component({
   selector: 'app-track-form',
@@ -199,7 +200,6 @@ export class TrackFormComponent implements OnInit {
       }
     });
   }
-
   private initForm() {
     this.trackForm = this.fb.group({
       title: ['', [Validators.required, Validators.maxLength(50)]],

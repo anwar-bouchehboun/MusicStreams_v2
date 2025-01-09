@@ -294,7 +294,7 @@ export class AudioService {
       this.audioContext.close();
       this.audioContext = null;
     }
-
+    // AUDIO CLEANUP
     this.isAudioContextInitialized = false;
     this.currentTrack = null;
   }
@@ -308,7 +308,7 @@ export class AudioService {
           this.audioContext?.currentTime || 0
         );
       }
-
+      // AUDIO PLAY
       this.audio.play();
       this.store.dispatch(
         PlayerActions.setStatus({ status: PlaybackStatus.PLAYING })
