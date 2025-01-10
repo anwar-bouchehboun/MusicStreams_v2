@@ -116,9 +116,7 @@ import { BehaviorSubject } from 'rxjs';
             accept=".png,.jpg,.jpeg"
             style="display: none"
           />
-          <span class="text-xl font-bold text-teal-700">
-            Optionnel
-          </span>
+          <span class="text-xl font-bold text-teal-700"> Optionnel </span>
           @if (coverPreview) {
           <div class="cover-preview">
             <img
@@ -277,9 +275,19 @@ export class TrackFormComponent implements OnInit {
     };
   }
 
+  // Cover image
   onCoverSelected(event: Event): void {
     const file = (event.target as HTMLInputElement).files?.[0];
     if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        Swal.fire({
+          title: 'Taille de fichier invalide',
+          text: 'Veuillez sélectionner une image de moins de 5 Mo',
+          icon: 'error',
+        });
+        return;
+      }
+
       if (!this.isValidImageType(file)) {
         Swal.fire({
           title: 'Format invalide',
@@ -348,6 +356,8 @@ export class TrackFormComponent implements OnInit {
           this.router.navigate(['/library']);
         });
       } else {
+        console.log(this.trackForm.value);
+
         const newTrack: Track = {
           id: Date.now().toString(),
           ...trackData,
@@ -356,7 +366,7 @@ export class TrackFormComponent implements OnInit {
           coverFile: this.coverFile,
           fileUrl: this.audioFile ? URL.createObjectURL(this.audioFile) : '',
         };
-
+        console.log(newTrack);
         this.storageService
           .addTrack(newTrack, this.audioFile!)
           .subscribe(() => {

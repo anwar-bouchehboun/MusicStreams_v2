@@ -72,6 +72,8 @@ export class LibraryComponent implements OnInit, OnDestroy {
   }
   loadTracks() {
     this.isLoading = true;
+
+
     this.trackService
       .getAllTracks()
       .pipe(delay(1000))
