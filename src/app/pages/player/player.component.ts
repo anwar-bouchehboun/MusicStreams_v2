@@ -126,7 +126,7 @@ import Swal from 'sweetalert2';
           </div>
 
           <!-- Volume -->
-          <div class="flex justify-center items-center mt-4 space-x-2">
+          <div class="flex justify-center items-center mt-4 ml-40 w-24">
             <button
               mat-icon-button
               (click)="toggleMute()"
@@ -149,6 +149,20 @@ import Swal from 'sweetalert2';
       </div>
     </div>
   `,
+  styles: [
+    `
+      .progress-controls {
+        position: relative;
+      }
+      .mat-mdc-slider  {
+        width: 100%;
+      }
+      .mdc-slider__input {
+        cursor: pointer;
+
+      }
+    `,
+  ],
 })
 export class PlayerComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
@@ -402,5 +416,15 @@ export class PlayerComponent implements OnInit, OnDestroy {
     this.volume$.pipe(take(1)).subscribe((volume) => {
       this.audioService.toggleMute(volume || 0);
     });
+  }
+
+  onError() {
+    console.error('Erreur lors de la lecture de la piste');
+    this.store.dispatch(
+      PlayerActions.setStatus({
+        status: PlaybackStatus.ERROR,
+        error: 'Erreur lors de la lecture',
+      })
+    );
   }
 }

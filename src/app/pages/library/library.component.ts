@@ -96,6 +96,7 @@ export class LibraryComponent implements OnInit, OnDestroy {
     return tracks
       .map((track) => ({
         ...track,
+
         // Assurez-vous que coverUrl existe, sinon utilisez l'image par défaut
         coverUrl: track.coverUrl || 'assets/images/music.png',
       }))
@@ -153,7 +154,7 @@ export class LibraryComponent implements OnInit, OnDestroy {
     // Completing destroy$ to clean up subscriptions
     this.destroy$.next();
     this.destroy$.complete();
-
+    
     console.log('LibraryComponent destroyed');
   }
 
