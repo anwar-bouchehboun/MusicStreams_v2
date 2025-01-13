@@ -11,6 +11,7 @@ export interface PlayerState {
   queue: Track[];
   currentIndex: number;
   playlist: Track[];
+  isMuted: boolean;
 }
 
 export enum PlaybackStatus {

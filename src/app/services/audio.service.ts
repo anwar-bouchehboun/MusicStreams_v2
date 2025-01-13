@@ -17,7 +17,7 @@ export class AudioService {
   private sourceNode: MediaElementAudioSourceNode | null = null;
   private currentTrack: Track | null = null;
   private previousVolume: number = 1;
-  private isMuted: boolean = false;
+  private _isMuted: boolean = false;
   public readonly PLAYER_STATE_KEY = 'playerState';
   private isAudioContextInitialized = false;
 
@@ -27,6 +27,7 @@ export class AudioService {
   ) {
     this.audio = new Audio();
     this.setupAudioListeners();
+    this.setupPlaybackSaveListeners();
   }
 
   private async initializeAudioContext() {
@@ -40,7 +41,9 @@ export class AudioService {
 
       // Initialiser le nouveau contexte
       this.audioContext = new AudioContext();
+      // TODO: add the gainNode to the server indexedDb
       this.gainNode = this.audioContext.createGain();
+      // TODO: add the sourceNode to the server indexedDb
       this.sourceNode = this.audioContext.createMediaElementSource(this.audio);
 
       // Établir les connexions
@@ -110,6 +113,16 @@ export class AudioService {
     this.audio.addEventListener('timeupdate', () => {
       this.savePlayerState();
     });
+
+    // Sauvegarder la position toutes les secondes pendant la lecture
+    this.audio.addEventListener('timeupdate', () => {
+      this.savePlaybackPosition();
+    });
+
+    // Sauvegarder la position lors de la pause
+    this.audio.addEventListener('pause', () => {
+      this.savePlaybackPosition();
+    });
   }
 
   async play(track: Track): Promise<void> {
@@ -138,6 +151,14 @@ export class AudioService {
         this.currentTrack = track;
         this.audio.src = audioUrl;
         this.audio.load();
+      }
+
+      // Restaurer la dernière position de lecture sans vérifier le temps écoulé
+      const savedState = localStorage.getItem(`playback_${track.id}`);
+      if (savedState) {
+        const state = JSON.parse(savedState);
+        // Restaurer la position directement
+        this.audio.currentTime = state.position;
       }
 
       await this.audio.play();
@@ -226,10 +247,6 @@ export class AudioService {
     return this.audio.volume;
   }
 
-  getMute(): boolean {
-    return this.isMuted;
-  }
-
   getPreviousVolume(): number {
     return this.previousVolume;
   }
@@ -274,6 +291,9 @@ export class AudioService {
   }
 
   public cleanup(): void {
+    // Sauvegarder la position avant le nettoyage
+    this.savePlaybackPosition();
+
     // Stop playback
     if (this.audio) {
       this.audio.pause();
@@ -318,5 +338,83 @@ export class AudioService {
 
   getCurrentTrackId(): string | null {
     return this.currentTrack?.id || null;
+  }
+
+  public isMuted(): boolean {
+    // votre logique pour vérifier si le lecteur est muet
+    return this._isMuted; // Assurez-vous que 'isMuted' est une propriété booléenne
+  }
+
+  private savePlaybackPosition(): void {
+    if (this.currentTrack) {
+      const playbackState = {
+        trackId: this.currentTrack.id,
+        //playback position is the current time of the audio
+        position: this.audio.currentTime,
+        timestamp: new Date().getTime(),
+        volume: this.gainNode?.gain.value || 1,
+        duration: this.audio.duration,
+        title: this.currentTrack.title,
+        artist: this.currentTrack.artist,
+        lastPlayedDate: new Date().toISOString(),
+      };
+      localStorage.setItem(
+        `playback_${this.currentTrack.id}`,
+        JSON.stringify(playbackState)
+      );
+    }
+  }
+
+  public async restorePlaybackPosition(
+    trackId: string
+  ): Promise<number | null> {
+    try {
+      const savedState = localStorage.getItem(`playback_${trackId}`);
+      if (savedState) {
+        const state = JSON.parse(savedState);
+        // Restaurer directement la position sans vérifier le temps écoulé
+        if (state.position >= 0 && state.position <= state.duration) {
+          // Vérifier si la position n'est pas trop proche de la fin
+          if (state.position < state.duration - 10) {
+            return state.position;
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Erreur lors de la restauration de la position:', error);
+    }
+    return null;
+  }
+
+  // Ajouter des écouteurs d'événements supplémentaires pour sauvegarder la position
+  private setupPlaybackSaveListeners(): void {
+    // Sauvegarder toutes les 10 secondes pendant la lecture
+    setInterval(() => {
+      if (!this.audio.paused && !this.audio.ended) {
+        this.savePlaybackPosition();
+      }
+    }, 10000);
+
+    // Sauvegarder lors de la pause
+    this.audio.addEventListener('pause', () => {
+      this.savePlaybackPosition();
+    });
+
+    // Sauvegarder lors de la recherche (seek)
+    this.audio.addEventListener('seeked', () => {
+      this.savePlaybackPosition();
+    });
+
+    // Sauvegarder avant la fermeture de la page
+    window.addEventListener('beforeunload', () => {
+      this.savePlaybackPosition();
+    });
+
+    // Sauvegarder lors de la mise en veille de l'onglet
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') {
+        this.savePlaybackPosition();
+      }
+    });
   }
 }

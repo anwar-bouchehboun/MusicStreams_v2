@@ -154,12 +154,11 @@ import Swal from 'sweetalert2';
       .progress-controls {
         position: relative;
       }
-      .mat-mdc-slider  {
+      .mat-mdc-slider {
         width: 100%;
       }
       .mdc-slider__input {
         cursor: pointer;
-
       }
     `,
   ],
@@ -175,6 +174,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
   currentTime$ = this.store.select((state) => state.player.currentTime);
   duration$ = this.store.select((state) => state.player.duration);
   volume$ = this.store.select((state) => state.player.volume);
+  isMuted$ = this.store.select((state) => state.player.isMuted);
   progress$ = this.store.select((state) => {
     const currentTime = state.player.currentTime || 0;
     const duration = state.player.duration || 1;
@@ -213,20 +213,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
     // Restaurer l'état du lecteur au chargement
     this.tryRestoreLastPlayedTrack();
 
-    // S'abonner aux changements d'état du lecteur pour sauvegarder
-    /* this.currentTrack$.pipe(takeUntil(this.destroy$)).subscribe((track) => {
-      if (track) {
-        const playerState = {
-          track,
-          volume: this.audioService.getVolume(),
-          currentTime: this.audioService.getCurrentTime(),
-        };
-        localStorage.setItem(
-          this.audioService.PLAYER_STATE_KEY,
-          JSON.stringify(playerState)
-        );
-      }
-    });*/
+
   }
 
   private async tryRestoreLastPlayedTrack() {
@@ -291,7 +278,21 @@ export class PlayerComponent implements OnInit, OnDestroy {
       }
 
       this.store.dispatch(PlayerActions.setCurrentTrack({ track }));
+
+      // Restaurer la dernière position de lecture
+      const savedPosition = await this.audioService.restorePlaybackPosition(
+        track.id
+      );
+
       await this.audioService.play(trackData);
+
+      // Si une position sauvegardée existe, l'appliquer après un court délai
+      if (savedPosition !== null) {
+        // Attendre un court instant pour que l'audio soit chargé
+        setTimeout(() => {
+          this.audioService.seek(savedPosition / trackData.duration);
+        }, 100);
+      }
     } catch (error) {
       console.error('Erreur de lecture:', error);
       this.store.dispatch(
@@ -301,6 +302,12 @@ export class PlayerComponent implements OnInit, OnDestroy {
         })
       );
     }
+  }
+
+  private formatTime(seconds: number): string {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   }
 
   private async tryRestorePlayerState(track: Track) {
@@ -402,12 +409,16 @@ export class PlayerComponent implements OnInit, OnDestroy {
   onSeek(value: number | null) {
     console.log('onSeek', value);
     if (value !== null) {
-      this.audioService.seek(value / 100);
+      this.volume$.pipe(take(1)).subscribe((volume) => {
+        if (volume > 0) {
+          this.audioService.seek(value / 100);
+        }
+      });
     }
   }
 
   onVolumeChange(value: number | null) {
-    if (value !== null) {
+    if (value !== null && value > 0 && !this.audioService.isMuted()) {
       this.audioService.setVolume(value);
     }
   }
